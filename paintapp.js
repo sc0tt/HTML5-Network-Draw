@@ -1,18 +1,28 @@
 $(document).ready(function () {
 	var canvasDiv = document.getElementById('painter');
 	var canvas = document.createElement('canvas');
-	canvas.setAttribute('width', window.innerWidth-14);
-	canvas.setAttribute('height', window.innerHeight-14);
+	//canvas.setAttribute('width', window.innerWidth-14);
+	//canvas.setAttribute('height', window.innerHeight-14);
 	canvas.setAttribute('id', 'paintapp');
+	$('paintapp').css('cursor','pointer');
+	
+	
 	canvasDiv.appendChild(canvas);
 	context = canvas.getContext("2d");
+	context.canvas.width  = window.innerWidth-14;
+	context.canvas.height = window.innerHeight-14;
 	context.lineWidth = 5;
 	context.lineJoin = "round";
 	context.strokeStyle = "#000000";
-    var waiting = false, tempX = new Array(), tempY = new Array(), tempDrag = new Array();
+    var waiting = false, qX = new Array(), qY = new Array(), qDrag = new Array(), qsID = new Array();
 	var cX = new Array();
 	var cY = new Array();
 	var cDrag = new Array();
+	var sID = new Array();
+	var tempX = new Array();
+	var tempY = new Array();
+	var tempDrag = new Array();
+	var tempsID = new Array();
     var lastSentID = 0;
 	var isPainting;
 	var lasti = 0;
@@ -20,26 +30,45 @@ $(document).ready(function () {
 	context.fillStyle = '#ffffff';
 	context.fillRect (0, 0, canvas.width, canvas.height);
     
-    var socket = io.connect('http://radicalwhale.net:6969');
+	canvas.onselectstart = function () { return false; } 
+	canvas.onmousedown = function () { return false; }
+	
+    var socket = io.connect('http://scottadie.com:6969');
 	var sessionId;    
     //SOCKETSSS
     socket.on('connect', function() {
 		sessionId = socket.socket.sessionid;
-	});
-    
-    socket.on('add', function(x, y, drag) {
-        tempX.push(x);
-		tempY.push(y);
-		tempDrag.push(drag);
+	})
+	.on('clear', function() {
+		var cX = new Array();
+		var cY = new Array();
+		var cDrag = new Array();
+		var sID = new Array();
+		context.fillStyle = '#ffffff';
+		context.fillRect(0, 0, canvas.width, canvas.height);
+		lasti = 0;
+		update();
+		
+	})
+	.on('add', function(x, y, drag, sid) {
+        qX = qX.concat(x.split(','));;
+		qY = qY.concat(y.split(','));
+		qDrag = qDrag.concat(drag.split(','));
+		qsID = qsID.concat(sid.split(','));
         waiting = true;
-        update(); //Easier than doing newClick() a bunch of times
-	});
-    
-    $(window).resize(function() {
-        canvas.setAttribute('width', window.innerWidth-11);
-        canvas.setAttribute('height', window.innerHeight-11);
         update();
-        lasti = 0;
+	});
+	
+    $('#clr').click(function() {
+		socket.emit('clear', $('#login').val());
+	});
+	
+    $(window).resize(function() {
+        context.canvas.width  = window.innerWidth-14;
+		context.canvas.height = window.innerHeight-14;
+		lasti = 0;
+        update();
+        
     });
     
 	$('#paintapp').mousedown(function(e) {
@@ -59,45 +88,52 @@ $(document).ready(function () {
 	})
     .mouseleave(function(e) {
 		isPainting = false;
+		sendData();
 	})
     .mouseup(function(e) {
 		isPainting = false;
         update();
-         //Will eventually send only new data
+		sendData();
 	});
-	/* .mouseup(function(e) {
-		isPainting = false;
-        var tX, tY, tDrag;
-        for(var i = lastSentID; i < cX.length; i++) {
-            tX = tX + cX[i] + (i < cX.length-1 ? "," : "");
-            tY = tY + cY[i] + (i < cY.length-1 ? "," : "");;
-            tDrag = tDrag + cDrag[i] + (i < cDrag.length-1 ? "," : "");;     
-        }
-        socket.emit('add', tX, tY, tDrag); //Will eventually send only new data
-	}); */
+	
+	function sendData() {
+		if(tempX.length > 0) {
+			socket.emit('add', tempX.toString(), tempY.toString(), tempDrag.toString(), tempsID.toString());
+			tempX = new Array();
+			tempY = new Array();
+			tempDrag = new Array();
+			tempsID = new Array();
+		}
+	}
 	function newClick(x, y, isDragging)	{
         cX.push(x);
         cY.push(y);
         cDrag.push(isDragging);
-        socket.emit('add', x, y, isDragging);
+		sID.push(sessionId);
+		tempX.push(x);
+        tempY.push(y);
+        tempDrag.push(isDragging);
+		tempsID.push(sessionId);
 	}
 
 	function update(){
         //console.log("Painting: " + isPainting + "; Waiting: " + waiting + "; Processing: " + processing);
         if(isPainting == false && waiting == true && processing == false) {
             processing = true;
-            cX = cX.concat(tempX);
-            cY = cY.concat(tempY);
-            cDrag = cDrag.concat(tempDrag);
+            cX = cX.concat(qX);
+            cY = cY.concat(qY);
+            cDrag = cDrag.concat(qDrag);
+			sID = sID.concat(qsID);
             processing = false;
             waiting = false;
-            tempX = new Array();
-            tempY = new Array();
-            tempDrag = new Array();
+            qX = new Array();
+            qY = new Array();
+            qDrag = new Array();
+            qsID = new Array();
         }
     
 		for(var i=lasti; i < cX.length; i++) {	
-			context.beginPath();
+			if(i > 0 && sID[i] != sID[i-1]) cDrag[i] = false;
 			context.lineWidth = 5;
             context.lineJoin = "round";
             context.strokeStyle = "#000000";
@@ -135,6 +171,6 @@ $(document).ready(function () {
         update();
         requestAnimFrame(loop, canvas);
     })();
-    
+    $('.hide').click(function() { $('#head').fadeOut(300); });
 });
 

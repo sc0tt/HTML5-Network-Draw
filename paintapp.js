@@ -11,8 +11,8 @@ $(document).ready(function () {
   context.strokeStyle = "#000000";
   context.fillStyle = '#ffffff';
   context.fillRect(0, 0, canvas.width, canvas.height);
-  var lineData = [],
-    currLine,
+  var lineData = [];
+  var currLine = "",
     lasti = 0,
     isPainting = false;
   canvas.onselectstart = function () { return false; } 
@@ -30,7 +30,8 @@ $(document).ready(function () {
     context.fillRect(0, 0, canvas.width, canvas.height);
   })
   .on('add', function(data) {
-    
+    lineData.push(data.parse());
+    update();
   }); */
   
   $('#clr').click(function() {
@@ -48,16 +49,22 @@ $(document).ready(function () {
     var mouseY = e.pageY - this.offsetTop;
     isPainting = true;
     currLine = new Line(mouseX,mouseY,false);
+    console.log(lineData);
   })
   .mousemove(function(e) { 
-    if(isPainting) {
-      currLine.add(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, true);
+    var x = e.pageX - this.offsetLeft;
+    var y = e.pageY - this.offsetTop; 
+    if(isPainting /* && lineData.length > 0 */) {
+      //if((lineData[lineData.length-1].x != x) && (lineData[lineData.length-1].y != y)) {
+        currLine.add(x, y, true);
+      //}
     }
   })
   .mouseleave(function(e) {
     if(isPainting) {
       isPainting = false;
       lineData.push(currLine);
+      sendData();
       update();
     }
   })
@@ -65,15 +72,13 @@ $(document).ready(function () {
     if(isPainting) {
       isPainting = false;
       lineData.push(currLine);
+      sendData();
       update();
     }
   });
   
   function sendData() {
-    /* if(tempX.length > 0) {
-      console.log("test");
-      socket.emit('add', JSON.stringify(pointData,null,2));
-    } */
+    /*socket.emit('add', JSON.stringify(lineData,null,2));*/
   }
 
   function update(){
@@ -83,15 +88,17 @@ $(document).ready(function () {
       context.lineJoin = "round";
       context.strokeStyle = "#000000";
       for(var z = 0; z < lineData[i].x.length; z++) {   
+        context.beginPath();
         if(lineData[i].drag[z]){
           context.moveTo(lineData[i].x[z-1], lineData[i].y[z-1]);
         }else{
           context.moveTo(lineData[i].x[z-1], lineData[i].y[z]);
         }
+        context.lineTo(lineData[i].x[z], lineData[i].y[z]);
+        context.closePath();
+        context.stroke();
       }
-      context.lineTo(lineData[i].x[z], lineData[i].y[z]);
-      context.closePath();
-      context.stroke();
+      
     }
     lasti = lineData.length;
   }

@@ -6,3 +6,26 @@ padding: 0px;
 font-family: arial;
 font-size:12px;
 }
+#head {
+width:320px;
+text-align:center;
+position:absolute;
+top:0;
+margin-left:-160px;
+left:50%;
+background:#2a2a2a;
+color:white;
+-webkit-border-bottom-right-radius: 3px;
+-webkit-border-bottom-left-radius: 3px;
+-moz-border-radius-bottomright: 3px;
+-moz-border-radius-bottomleft: 3px;
+border-bottom-right-radius: 3px;
+border-bottom-left-radius: 3px;
+}
+#head input[type="password"] {
+width:60px;
+}
+.hide {
+font-weight:bold;
+cursor:pointer;
+}

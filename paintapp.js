@@ -18,30 +18,34 @@ $(document).ready(function () {
   canvas.onselectstart = function () { return false; } 
   canvas.onmousedown = function () { return false; }
   
-  /* var socket = io.connect('http://localhost:6969'),
+  var socket = io.connect('http://radicalwhale.net:6969'),
     sessionId;    
   //SOCKETSSS
   socket.on('connect', function() {
     sessionId = socket.socket.sessionid;
   })
-  .on('clear', function() {
-    //lineData = [];
-    context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, canvas.width, canvas.height);
+  .on('clearUser', function() {
+    clear();
+    lineData = [];
   })
   .on('add', function(data) {
-    lineData.push(data.parse());
+    lineData.push(JSON.parse(data));
     update();
-  }); */
+  }); 
   
   $('#clr').click(function() {
-    /* socket.emit('clear', $('#login').val()); */
+    socket.emit('clear', $('#login').val());
+  });
+  
+  $('.hide').click(function() {
+    $('#head').css('display','none');
   });
   
   $(window).resize(function() {
     context.canvas.width  = window.innerWidth-14;
     context.canvas.height = window.innerHeight-14;
     lasti = 0;
+    update();
   });
   
   $('#paintapp').mousedown(function(e) {
@@ -49,7 +53,6 @@ $(document).ready(function () {
     var mouseY = e.pageY - this.offsetTop;
     isPainting = true;
     currLine = new Line(mouseX,mouseY,false);
-    console.log(lineData);
   })
   .mousemove(function(e) { 
     var x = e.pageX - this.offsetLeft;
@@ -78,7 +81,7 @@ $(document).ready(function () {
   });
   
   function sendData() {
-    /*socket.emit('add', JSON.stringify(lineData,null,2));*/
+    socket.emit('add', JSON.stringify(currLine,null,2));
   }
 
   function update(){
@@ -102,12 +105,11 @@ $(document).ready(function () {
     }
     lasti = lineData.length;
   }
-  function clear() { //never used, for debugging
+  function clear() {
+    context.save();
+    context.setTransform(1, 0, 0, 1, 0, 0);
     context.clearRect(0, 0, canvas.width, canvas.height);
-    var w = canvas.width;
-    canvas.width = 1;
-    canvas.width = w;
-    context.fillRect (0, 0, canvas.width, canvas.height);
+    context.restore();
   }
   
   window.requestAnimFrame = (function(){
@@ -126,7 +128,6 @@ $(document).ready(function () {
     requestAnimFrame(loop, canvas);
   })();
 });
-
 var Line = function(x,y,drag)
 {
   this.x = [x];
@@ -134,10 +135,8 @@ var Line = function(x,y,drag)
   this.drag = [drag];
   this.add = function(x,y,drag)
   {
-    console.log("Adding data to my arrays");
     this.x.push(x);
     this.y.push(y);
     this.drag.push(drag);
   }
 }
-

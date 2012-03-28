@@ -22,7 +22,7 @@ io.sockets.on('connection', function(socket) {
       socket.broadcast.emit('add', data);
       });
     });
-var minutes = 1 * 10 * 1000;
+var minutes = 5 * 60 * 1000;
 
 function drawToCanvas(data)
 {

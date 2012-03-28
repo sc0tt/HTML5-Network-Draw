@@ -49,7 +49,7 @@ setInterval(function() {
   stream = canvas.toDataURL().replace(/^data:image\/png;base64,/,""),
   buffer = new Buffer(stream, 'base64');
   fs.writeFile('./img/last.png', buffer, function(error) {
-    console.log(error);
+    if(error != null) console.log(error);
   });
   context.save();
   context.setTransform(1, 0, 0, 1, 0, 0);

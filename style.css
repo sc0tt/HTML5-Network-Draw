@@ -29,3 +29,6 @@ width:60px;
 font-weight:bold;
 cursor:pointer;
 }
+#painter:active { 
+cursor: crosshair;
+}

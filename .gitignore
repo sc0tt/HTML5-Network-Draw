@@ -1,3 +1,5 @@
 #Ignore These Files
 node_modules/*
 *.sh
+img/*
+npm-debug.log

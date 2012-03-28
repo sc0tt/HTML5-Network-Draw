@@ -11,6 +11,9 @@ $(document).ready(function () {
   context.strokeStyle = "#000000";
   context.fillStyle = '#ffffff';
   context.fillRect(0, 0, canvas.width, canvas.height);
+  
+  $.getScript("Line.js", function(){});
+  
   var lineData = [];
   var currLine = "",
     lasti = 0,
@@ -128,15 +131,3 @@ $(document).ready(function () {
     requestAnimFrame(loop, canvas);
   })();
 });
-var Line = function(x,y,drag)
-{
-  this.x = [x];
-  this.y = [y];
-  this.drag = [drag];
-  this.add = function(x,y,drag)
-  {
-    this.x.push(x);
-    this.y.push(y);
-    this.drag.push(drag);
-  }
-}

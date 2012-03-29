@@ -58,10 +58,10 @@ $(document).ready(function () {
     var x = e.pageX - this.offsetLeft;
     var y = e.pageY - this.offsetTop; 
     if(isPainting /* && lineData.length > 0 */) {
-      //if((lineData[lineData.length-1].x != x) && (lineData[lineData.length-1].y != y)) {
+      if((currLine.x[currLine.x.length-1] != x) && (currLine.y[currLine.y.length-1].y != y)) {
         currLine.add(x, y, true);
         update();
-      //}
+      }
     }
   })
   .mouseleave(function(e) {

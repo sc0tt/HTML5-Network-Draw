@@ -2,7 +2,8 @@ var io = require('socket.io').listen(6969);
 var Canvas = require('canvas'),
 canvas = new Canvas(800,480),
 context = canvas.getContext('2d'),
-fs = require('fs');
+var fs = require('fs');
+var path = require('path'); 
 // Turn off socket.io debug messages
 io.set('log level', 2);
 var adminPW = "hello";
@@ -46,7 +47,11 @@ function drawToCanvas(data)
 
 setInterval(function() {
   if(history.length > 0) {
-    fs.unlinkSync('./last.png');
+    path.exists('./last.png', function(exists) {
+      if(exists) {
+        fs.unlinkSync('./last.png');
+      }
+    });
     stream = canvas.toDataURL().replace(/^data:image\/png;base64,/,""),
     buffer = new Buffer(stream, 'base64');
     fs.writeFile('./last.png', buffer, function(error) {

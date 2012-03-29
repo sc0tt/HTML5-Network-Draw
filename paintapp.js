@@ -4,8 +4,8 @@ $(document).ready(function () {
   canvas.setAttribute('id', 'paintapp');
   canvasDiv.appendChild(canvas);
   var context = canvas.getContext("2d");
-  context.canvas.width  = window.innerWidth - 14;
-  context.canvas.height = window.innerHeight - 14;
+  context.canvas.width  = 800;
+  context.canvas.height = 480;
   context.lineWidth = 5;
   context.lineJoin = "round";
   context.strokeStyle = "#000000";
@@ -20,7 +20,6 @@ $(document).ready(function () {
   
   var socket = io.connect('http://radicalwhale.net:6969'),
     sessionId;    
-  //SOCKETSSS
   socket.on('connect', function() {
     sessionId = socket.socket.sessionid;
   })
@@ -41,18 +40,19 @@ $(document).ready(function () {
     $('#head').css('display','none');
   });
   
-  $(window).resize(function() {
+  /* $(window).resize(function() {
     context.canvas.width  = window.innerWidth-14;
     context.canvas.height = window.innerHeight-14;
     lasti = 0;
     update();
-  });
+  }); */
   
   $('#paintapp').mousedown(function(e) {
     var mouseX = e.pageX - this.offsetLeft;
     var mouseY = e.pageY - this.offsetTop;
     isPainting = true;
     currLine = new Line(mouseX,mouseY,false);
+    update();
   })
   .mousemove(function(e) { 
     var x = e.pageX - this.offsetLeft;
@@ -60,32 +60,46 @@ $(document).ready(function () {
     if(isPainting /* && lineData.length > 0 */) {
       //if((lineData[lineData.length-1].x != x) && (lineData[lineData.length-1].y != y)) {
         currLine.add(x, y, true);
+        update();
       //}
     }
   })
   .mouseleave(function(e) {
-    if(isPainting) {
-      isPainting = false;
-      lineData.push(currLine);
-      sendData();
-      update();
-    }
+    finishLine();
   })
   .mouseup(function(e) {
+    finishLine();
+  });
+  
+  function finishLine() {
     if(isPainting) {
       isPainting = false;
       lineData.push(currLine);
       sendData();
+      currLine = null;
       update();
     }
-  });
+  }
   
   function sendData() {
-    socket.emit('add', JSON.stringify(currLine,null,2));
+    socket.emit('add', JSON.stringify(lineData[lineData.length-1],null,2));
   }
 
   function update(){
-    //console.log("Painting: " + isPainting + "; Waiting: " + waiting + "; Processing: " + processing);   
+    if(currLine != null && currLine.x != undefined) {
+      lasti++;
+      for(var z = 0; z < currLine.x.length; z++) {   
+        context.beginPath();
+        if(currLine.drag[z]){
+          context.moveTo(currLine.x[z-1], currLine.y[z-1]);
+        }else{
+          context.moveTo(currLine.x[z-1], currLine.y[z]);
+        }
+        context.lineTo(currLine.x[z], currLine.y[z]);
+        context.closePath();
+        context.stroke();
+      }
+    }
     for(var i=lasti; i < lineData.length; i++) {	
       context.lineWidth = 5;
       context.lineJoin = "round";
@@ -101,10 +115,10 @@ $(document).ready(function () {
         context.closePath();
         context.stroke();
       }
-      
     }
     lasti = lineData.length;
   }
+  
   function clear() {
     context.save();
     context.setTransform(1, 0, 0, 1, 0, 0);
@@ -124,10 +138,10 @@ $(document).ready(function () {
   })();	
 
   (function loop() {
-    //update();
     requestAnimFrame(loop, canvas);
   })();
 });
+
 var Line = function(x,y,drag)
 {
   this.x = [x];

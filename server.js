@@ -1,6 +1,6 @@
 var io = require('socket.io').listen(6969);
 var Canvas = require('canvas'),
-canvas = new Canvas(1920,1080),
+canvas = new Canvas(600,400),
 context = canvas.getContext('2d'),
 fs = require('fs');
 // Turn off socket.io debug messages

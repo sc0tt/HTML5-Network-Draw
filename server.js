@@ -1,6 +1,6 @@
 var io = require('socket.io').listen(6969);
 var Canvas = require('canvas'),
-canvas = new Canvas(600,400),
+canvas = new Canvas(800,480),
 context = canvas.getContext('2d'),
 fs = require('fs');
 // Turn off socket.io debug messages
@@ -46,10 +46,10 @@ function drawToCanvas(data)
 
 setInterval(function() {
   if(history.length > 0) {
-    fs.unlinkSync('./img/last.png');
+    fs.unlinkSync('./last.png');
     stream = canvas.toDataURL().replace(/^data:image\/png;base64,/,""),
     buffer = new Buffer(stream, 'base64');
-    fs.writeFile('./img/last.png', buffer, function(error) {
+    fs.writeFile('./last.png', buffer, function(error) {
       if(error != null) console.log(error);
     });
   }

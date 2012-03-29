@@ -1,11 +1,6 @@
 $(document).ready(function () {
-  var canvasDiv = document.getElementById('painter');
-  var canvas = document.createElement('canvas');
-  canvas.setAttribute('id', 'paintapp');
-  canvasDiv.appendChild(canvas);
+  var canvas = document.getElementById('paintapp');
   var context = canvas.getContext("2d");
-  context.canvas.width  = 800;
-  context.canvas.height = 480;
   context.lineWidth = 5;
   context.lineJoin = "round";
   context.strokeStyle = "#000000";
@@ -18,7 +13,7 @@ $(document).ready(function () {
   canvas.onselectstart = function () { return false; } 
   canvas.onmousedown = function () { return false; }
   
-  var socket = io.connect('http://radicalwhale.net:6969'),
+  var socket = io.connect('http://scottadie.com:6969'),
     sessionId;    
   socket.on('connect', function() {
     sessionId = socket.socket.sessionid;
@@ -39,13 +34,6 @@ $(document).ready(function () {
   $('.hide').click(function() {
     $('#head').css('display','none');
   });
-  
-  /* $(window).resize(function() {
-    context.canvas.width  = window.innerWidth-14;
-    context.canvas.height = window.innerHeight-14;
-    lasti = 0;
-    update();
-  }); */
   
   $('#paintapp').mousedown(function(e) {
     var mouseX = e.pageX - this.offsetLeft;

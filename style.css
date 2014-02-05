@@ -28,14 +28,16 @@ width:60px;
 font-weight:bold;
 cursor:pointer;
 }
-#painter, #painter:hover, #painter:active { 
+/*#painter, #painter:hover, #painter:active { 
 cursor: crosshair;
-}
+}*/
 #painter {
 width:800px;
 height:480px;
 margin-left:auto;
 margin-right:auto;
+}
+.drawing-board-canvas-wrapper {
 -moz-box-shadow: 0 0 4px #888;
 -webkit-box-shadow: 0 0 4px#888;
 box-shadow: 0 0 4px #888;

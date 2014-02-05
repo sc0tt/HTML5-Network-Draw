@@ -1,144 +1,65 @@
-$(document).ready(function () {
-  var canvas = document.getElementById('paintapp');
-  var context = canvas.getContext("2d");
-  context.lineWidth = 5;
-  context.lineJoin = "round";
-  context.strokeStyle = "#000000";
-  context.fillStyle = '#ffffff';
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  var lineData = [];
-  var currLine = "",
-    lasti = 0,
-    isPainting = false;
-  canvas.onselectstart = function () { return false; } 
-  canvas.onmousedown = function () { return false; }
-  
-  var socket = io.connect('http://scottadie.com:6969'),
-    sessionId;    
-  socket.on('connect', function() {
-    sessionId = socket.socket.sessionid;
-  })
-  .on('clearUser', function() {
-    clear();
-    lineData = [];
-  })
-  .on('add', function(data) {
-    lineData.push(JSON.parse(data));
-    update();
-  }); 
-  
-  $('#clr').click(function() {
-    socket.emit('clear', $('#login').val());
+var board;
+var cache;
+var d;
+$(document).ready(function () {  
+
+  board = new DrawingBoard.Board("painter", {
+    controlsPosition: "top left",
+    webStorage: false,
+    controls: [
+      'Color',
+      {Size: { type: "dropdown" } },
+      { Navigation: { back: false, forward: false, reset: false } },
+    ]
+
   });
-  
-  $('.hide').click(function() {
-    $('#head').css('display','none');
-  });
-  
-  $('#paintapp').mousedown(function(e) {
-    var mouseX = e.pageX - this.offsetLeft;
-    var mouseY = e.pageY - this.offsetTop;
-    isPainting = true;
-    currLine = new Line(mouseX,mouseY,false);
-    update();
-  })
-  .mousemove(function(e) { 
-    var x = e.pageX - this.offsetLeft;
-    var y = e.pageY - this.offsetTop; 
-    if(isPainting /* && lineData.length > 0 */) {
-      if((currLine.x[currLine.x.length-1] != x) && (currLine.y[currLine.y.length-1].y != y)) {
-        currLine.add(x, y, true);
-        update();
-      }
-    }
-  })
-  .mouseleave(function(e) {
-    finishLine();
-  })
-  .mouseup(function(e) {
-    finishLine();
-  });
-  
-  function finishLine() {
-    if(isPainting) {
-      isPainting = false;
-      lineData.push(currLine);
-      sendData();
-      currLine = null;
-      update();
-    }
-  }
-  
-  function sendData() {
-    socket.emit('add', JSON.stringify(lineData[lineData.length-1],null,2));
+
+  var socket = new WebSocket('ws://draw.scottadie.com/echo');    
+  socket.onopen = function() {
+    socket.send(JSON.stringify({cmd: "ping"}));
   }
 
-  function update(){
-    if(currLine != null && currLine.x != undefined) {
-      lasti++;
-      for(var z = 0; z < currLine.x.length; z++) {   
-        context.beginPath();
-        if(currLine.drag[z]){
-          context.moveTo(currLine.x[z-1], currLine.y[z-1]);
-        }else{
-          context.moveTo(currLine.x[z-1], currLine.y[z]);
-        }
-        context.lineTo(currLine.x[z], currLine.y[z]);
-        context.closePath();
-        context.stroke();
-      }
-    }
-    for(var i=lasti; i < lineData.length; i++) {	
-      context.lineWidth = 5;
-      context.lineJoin = "round";
-      context.strokeStyle = "#000000";
-      for(var z = 0; z < lineData[i].x.length; z++) {   
-        context.beginPath();
-        if(lineData[i].drag[z]){
-          context.moveTo(lineData[i].x[z-1], lineData[i].y[z-1]);
-        }else{
-          context.moveTo(lineData[i].x[z-1], lineData[i].y[z]);
-        }
-        context.lineTo(lineData[i].x[z], lineData[i].y[z]);
-        context.closePath();
-        context.stroke();
-      }
-    }
-    lasti = lineData.length;
-  }
-  
-  function clear() {
-    context.save();
-    context.setTransform(1, 0, 0, 1, 0, 0);
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.restore();
-  }
-  
-  window.requestAnimFrame = (function(){
-    return window.requestAnimationFrame ||
-    window.webkitRequestAnimationFrame ||
-    window.mozRequestAnimationFrame ||
-    window.oRequestAnimationFrame ||
-    window.msRequestAnimationFrame ||
-    function(/* function */ callback, /* DOMElement */ element){
-      window.setTimeout(callback, 1000 / 60);
-    };
-  })();	
+  socket.onmessage = function(msg) {
+    message = $.parseJSON(msg.data)
+    if(message.cmd == "add") {
+        board.isDrawing = true;
 
-  (function loop() {
-    requestAnimFrame(loop, canvas);
-  })();
+        var oldColor = board.color;
+        board.color = message.data.color;
+
+        var oldSize = board.ctx.lineWidth;
+        board.ctx.lineWidth = message.data.size;
+        console.log(message.data);
+        for(var i = 0; i < message.data.strokes.length; i++)
+        {
+          board.coords = message.data.strokes[i];
+          board.draw();
+          console.log("Drew");
+        }
+
+        board.color = oldColor;
+        board.ctx.lineWidth = oldSize;
+        board.isDrawing = false;
+    }
+  }
+
+  socket.onerror = function(err) { console.log(err); }
+
+  function sendData(cmd, data) {
+    socket.send(JSON.stringify({cmd: cmd, data: data}));
+  }
+
+  board.ev.bind('board:startDrawing', function(ev) {
+      cache = {color: board.color, size: board.ctx.lineWidth, strokes: [board.coords]};
+  });
+
+  board.ev.bind('board:stopDrawing', function() {
+    sendData('add', cache);
+  });
+
+  board.ev.bind('board:drawing', function(ev) {
+    if(board.isDrawing)  {
+      cache.strokes.push(board.coords);
+    }
+  });
 });
-
-var Line = function(x,y,drag)
-{
-  this.x = [x];
-  this.y = [y];
-  this.drag = [drag];
-  this.add = function(x,y,drag)
-  {
-    this.x.push(x);
-    this.y.push(y);
-    this.drag.push(drag);
-  }
-}

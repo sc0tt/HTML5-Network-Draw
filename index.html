@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta charset=utf-8 />
-    <script src="http://scottadie.com:6969/socket.io/socket.io.js"></script>
+        <link rel="stylesheet" href="drawingboard.min.css" type="text/css" />
 		<link rel="stylesheet" href="style.css" type="text/css" />
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script> 
-        <script type="text/javascript" src="paintapp.js?v=1"></script>	
-        <script type="text/javascript" src="json2.js"></script>	
+        <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+        <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+
+        <script src="drawingboard.js"></script>
+        <script type="text/javascript" src="paintapp.js?v=2"></script>	
        </head>
     <body>
-    <div id="head">Admin Tools<br /><span class="title"></span> <span class="admin"><input type="password" id="login" /> <input type="button" value="Clear canvas" id="clr" /></span> <span class="hide">X</span></div>
     <br />
     Drawing area gets reset every 5 minutes.<br />
     Anything drawn between resets is saved.<br />
     <a href="./last.png">Click here to view the last saved sketch.</a>
     <h4>Draw inside the box below!</h4>
     <div id="painter">
-      <canvas id="paintapp" width="800" height="480">Your browser does not support Canvas</canvas>
     </div>    
     </body>
 </html>

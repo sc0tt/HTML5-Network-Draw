@@ -1,5 +1,4 @@
 #Ignore These Files
-node_modules/*
-*.sh
+server/*.pyc
+server/env/*
 img/*
-npm-debug.log
